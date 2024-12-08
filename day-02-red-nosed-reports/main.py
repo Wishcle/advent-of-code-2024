@@ -16,14 +16,18 @@ def get_reports() -> List[List[int]]:
     return reports
 
 
+def _make_report_increasing(report: List[str]) -> List[str]:
+    if report[0] > report[-1]:
+        report = list(report)
+        report.reverse()
+    return report
+
+
 def _is_report_safe_return_index(report: List[str]) -> Optional[int]:
     if len(report) <= 1:
         return True
 
-    # Reverse if decreasing to simplify.
-    if report[0] > report[-1]:
-        report = list(report)
-        report.reverse()
+    report = _make_report_increasing(report)
 
     for i in range(len(report) - 1):
         increase = report[i+1] - report[i]
@@ -38,10 +42,7 @@ def is_report_safe(report: List[int]) -> bool:
 
 
 def is_report_safe_with_dampener(report: List[int]) -> bool:
-    # Reverse if decreasing to simplify.
-    if report[0] > report[-1]:
-        report = list(report)
-        report.reverse()
+    report = _make_report_increasing(report)
 
     # Get problematic index. If none, the report is already safe.
     index_to_remove = _is_report_safe_return_index(report)
