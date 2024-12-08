@@ -1,5 +1,5 @@
 
-from typing import List
+from typing import List, Optional
 
 
 def get_input_lines() -> List[str]:
@@ -16,7 +16,7 @@ def get_reports() -> List[List[int]]:
     return reports
 
 
-def is_report_safe(report: List[int]) -> bool:
+def _is_report_safe_return_index(report: List[str]) -> Optional[int]:
     if len(report) <= 1:
         return True
 
@@ -28,9 +28,13 @@ def is_report_safe(report: List[int]) -> bool:
     for i in range(len(report) - 1):
         increase = report[i+1] - report[i]
         if increase < 1 or increase > 3:
-            return False
+            return i + 1
 
-    return True
+    return None
+
+
+def is_report_safe(report: List[int]) -> bool:
+    return _is_report_safe_return_index(report) is None
 
 
 def part1() -> int:
