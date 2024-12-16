@@ -69,8 +69,11 @@ class Map:
         self.guard = guard
         assert guard is not None
 
-    def simulate_guard(self) -> int:
-        """Return distinct positions of the guard."""
+    def simulate_guard(self, obstacles_to_add: List[Position] = None) -> int:
+        """Return distinct positions of the guard. If loop, return -1."""
+        assert obstacles_to_add is None, "unimplemented"
+        obstacles_to_add = obstacles_to_add or []
+        obstacles = list(self.obstacles) + obstacles_to_add
 
         # if next pos is off the map, we are done. return distinct positions
         # if next pos is an obstacle, rotate guard
@@ -83,7 +86,7 @@ class Map:
             match self.guard.next_pos():
                 case (x, y) if _off_the_map(x, y):
                     return self.guard.get_distinct_positions()
-                case (x, y) if (x, y) in self.obstacles:
+                case (x, y) if (x, y) in obstacles:
                     self.guard.rotate()
                 case _:
                     self.guard.move()
