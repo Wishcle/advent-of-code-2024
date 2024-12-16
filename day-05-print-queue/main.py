@@ -1,4 +1,3 @@
-
 from typing import List, Set, Dict, Tuple
 
 
@@ -21,7 +20,7 @@ class Validator:
         self.deps[p2] = p2_deps
         self.deps.setdefault(p1, set())
 
-    def get_update_value(self, update: str) -> int:
+    def get_update_value(self, update: str) -> Tuple[int, int]:
         """Return the middle number if the update is valid. Else, 0."""
         update_list = update.split(",")
         all_pages = set(self.pages)
@@ -39,19 +38,38 @@ class Validator:
         for p in all_pages:
             all_deps = self._remove_page_from_deps(all_deps, p)
 
+        topo_deps = {k: set(v) for k, v in all_deps.items()}
+        topo_list = self._calculate_topo_ordering(topo_deps)
+        assert len(topo_list) == len(all_deps), f"{len(topo_list)=} != {len(all_deps)=}"
+
         # For each update page, check that it has no deps.
         # Then remove that page from other deps.
         for p in update_list:
             if len(all_deps[p]) > 0:
-                return 0
+                return 0, self._middle_to_int(topo_list)
             all_deps = self._remove_page_from_deps(all_deps, p)
 
-        middle_index = len(update_list) // 2
-        middle_page = int(update_list[middle_index])
-        return middle_page
+        return (self._middle_to_int(update_list), 0)
+
+    def _middle_to_int(self, list_: List[str]) -> int:
+        middle_index = len(list_) // 2
+        middle_item = int(list_[middle_index])
+        return middle_item
+
+    def _calculate_topo_ordering(self, deps: Dict[int, Set[int]]) -> List[str]:
+        ordering = []
+        while len(deps) > 0:
+            batch = [k for k, v in deps.items() if len(v) == 0]
+            assert len(batch) > 0, "impossible to satisfy constraints"
+            for p in batch:
+                deps = self._remove_page_from_deps(deps, p)
+            ordering.extend(batch)
+        return ordering
 
     def _remove_page_from_deps(
-        self, deps: Dict[int, Set[int]], page: int,
+        self,
+        deps: Dict[int, Set[int]],
+        page: int,
     ) -> Dict[int, Set[int]]:
         assert page in deps
         del deps[page]
@@ -78,7 +96,7 @@ def get_rules_and_updates() -> Tuple[List[str], List[str]]:
 
     for i in range(len(lines)):
         if lines[i] == "":
-            updates.extend(lines[i+1:])
+            updates.extend(lines[i + 1 :])
             break
         rules.append(lines[i])
 
@@ -92,12 +110,24 @@ def part1() -> int:
     for rule in rules:
         validator.add_rule(rule)
 
-    result = sum(validator.get_update_value(u) for u in updates)
+    result = sum(validator.get_update_value(u)[0] for u in updates)
+    return result
+
+
+def part2() -> int:
+    rules, updates = get_rules_and_updates()
+    validator = Validator()
+
+    for rule in rules:
+        validator.add_rule(rule)
+
+    result = sum(validator.get_update_value(u)[1] for u in updates)
     return result
 
 
 def main():
     print(f"PART 1 SOLUTION: {part1()}")
+    print(f"PART 2 SOLUTION: {part2()}")
 
 
 if __name__ == "__main__":
